@@ -28,7 +28,7 @@ Playwright 외 아래의 라이브러리를 추가로 사용하였습니다.
 
 
 ### 테스트 실행 화면
-- playwright-video 라이브러리를 이용
+- playwright-video 라이브러리를 이용하여 녹화
 
 https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/edacf4a0-1d87-4236-8844-c93901b8847f
 
