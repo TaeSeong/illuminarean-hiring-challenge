@@ -14,7 +14,6 @@
     "@types/node": "^20.11.25"
   },
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "dotenv": "^16.4.5",
     "faker": "^6.6.6",
     "playwright": "^1.42.1"
