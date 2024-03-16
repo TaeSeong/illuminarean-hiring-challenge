@@ -4,7 +4,8 @@ Playwright를 활용한 프로젝트입니다.
 
 Playwright 외 아래의 라이브러리를 추가로 사용하였습니다.
 
-- faker.js : 임의의 테스트 값 생성 시 사용
+- faker.js : 임의의 테스트 값 생성
+- dotenv : 환경 변수 관리
 
 
 ### 테스트 환경
@@ -49,12 +50,15 @@ https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/61cd06a
 - node 21.4.0
 - playwright 1.42.1
 - faker 6.6.6
+- dotenv 16.4.5
 
 ### 실행 방법
 
 ```
 npm install @playwright/1.42.1
 npm install @faker/6.6.6
+npm install dotenv
+npm install @types/dotenv --save-dev
 
 npx playwright test
 ```
