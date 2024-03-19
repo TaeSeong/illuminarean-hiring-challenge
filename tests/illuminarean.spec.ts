@@ -40,7 +40,7 @@ test.describe('Illuminarean Hiring Challenge', () => {
                 await illuminareanTab.click(btnModalClose); // 닫기 버튼의 button태그 aria-label 속성을 이용하여 클릭 처리
                 await illuminareanTab.click('a[aria-label="a11y:Work"]'); // Work 메뉴 클릭
             } else {
-                console.warn('illuminarean 메인화면 모달이 존재하지 않습니다.'); // 다음 Scenario에서 진행하기 때문에 에러로 판단하지 않음
+                console.warn('illuminarean 메인 화면 모달이 존재하지 않습니다.'); // 다음 Scenario에서 진행하기 때문에 에러로 판단하지 않음
             }
 
             // Then 모달이 화면에서 사라지고, 메인 화면에서 Work 메뉴로 이동한다.
@@ -48,7 +48,7 @@ test.describe('Illuminarean Hiring Challenge', () => {
                 await illuminareanTab.waitForURL(config.illuminareanWorkUrl); // Work 페이지 URL로의 이동을 기다림
                 await verifyPageUrl(illuminareanTab, config.illuminareanWorkUrl, /Work | 일루미나리안/);
             } else {
-                expect(false).toBe('illuminarean 메인화면 모달이 닫히지 않았습니다');
+                expect(false).toBe('illuminarean 메인 화면 모달이 닫히지 않았습니다');
             }
         });
 
