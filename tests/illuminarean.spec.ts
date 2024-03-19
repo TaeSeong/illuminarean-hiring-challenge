@@ -11,7 +11,6 @@
  * @author taeseong
  * @version 1.0.0
  * @since 2024-03-15
- * @update
  */
 import { Page, test, expect } from '@playwright/test';
 import { config, fillData } from './config';
