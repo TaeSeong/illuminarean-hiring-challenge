@@ -11,156 +11,174 @@
  * @author taeseong
  * @version 1.0.0
  * @since 2024-03-15
+ * @update
  */
 import { Page, test, expect } from '@playwright/test';
 import { config, fillData } from './config';
 
-test.describe('illuminarean', () => {
-  let illuminareanTab: Page; // illuminarean.com 사이트 테스트에서 사용할 페이지 객체
-  let goodvibeTab: Page; // works.goodvibe.kr 사이트 테스트에서 사용할 페이지 객체
+// Feature: Illuminarean Hiring Challenge
+test.describe('Illuminarean Hiring Challenge', () => {
+    let illuminareanTab: Page;
+    let goodvibeTab: Page;
 
-  test.beforeAll(async ({ browser }) => {
-    illuminareanTab = await browser.newPage(); // illuminarean.com 탭 초기화
-  });
-
-  test('hiring challenge', async() => {
-
-    await test.step('[illuminarean] 사이트 접속 및 정상 접속 확인', async() => {
-      await illuminareanTab.goto(config.illuminareanMainUrl); // illuminarean.com 메인 화면 접속
-      await expect(illuminareanTab).toHaveURL(config.illuminareanMainUrl); // 페이지 URL을 확인하여 검증
+    // Background: 사용자가 브라우저를 실행하고 illuminarean 웹사이트에 접속한다.
+    test.beforeAll(async ({ browser }) => {
+        illuminareanTab = await browser.newPage();
+        await illuminareanTab.goto(config.illuminareanMainUrl);
     });
 
-    await test.step('[illuminarean] Main > 페이지 타이틀 확인', async() => {
-      await expect(illuminareanTab).toHaveTitle(/일루미나리안/); // 테스트 대상 페이지인지 확인하기 위해 타이틀 확인
+    test('Illuminarean & GOODVIEW WORKS WebSite Scenario Test', async () => {
+        // Scenario: [illuminarean] 메인 페이지에 모달이 표시되고 있는 경우
+        await test.step('[illuminarean] 메인 페이지에 모달이 표시되고 있는 경우', async () => {
+            let btnModalClose = 'button[aria-label="company:close_modal"]';
+
+            // Given 사용자가 illuminarean 메인 페이지에 접속한 상태이며, 모달이 표시되고 있다.
+            await verifyPageUrl(illuminareanTab, config.illuminareanMainUrl, /일루미나리안/);
+
+            // When 사용자가 모달을 닫고, Work 메뉴를 클릭한다.
+            if (await isElementVisible(illuminareanTab, btnModalClose)) {
+                await illuminareanTab.click(btnModalClose); // 닫기 버튼의 button태그 aria-label 속성을 이용하여 클릭 처리
+                await illuminareanTab.click('a[aria-label="a11y:Work"]'); // Work 메뉴 클릭
+            } else {
+                console.warn('illuminarean 메인화면 모달이 존재하지 않습니다.'); // 다음 Scenario에서 진행하기 때문에 에러로 판단하지 않음
+            }
+
+            // Then 모달이 화면에서 사라지고, 메인 화면에서 Work 메뉴로 이동한다.
+            if (!await isElementVisible(illuminareanTab, btnModalClose)) {
+                await illuminareanTab.waitForURL(config.illuminareanWorkUrl); // Work 페이지 URL로의 이동을 기다림
+                await verifyPageUrl(illuminareanTab, config.illuminareanWorkUrl, /Work | 일루미나리안/);
+            } else {
+                expect(false).toBe('illuminarean 메인화면 모달이 닫히지 않았습니다');
+            }
+        });
+
+        // Scenario: [illuminarean] 메인 페이지에 모달이 표시되지 않은 경우
+        await test.step('[illuminarean] 메인 페이지에 모달이 표시되지 않은 경우', async () => {
+            let btnModalClose = 'button[aria-label="company:close_modal"]';
+            let closeModal: boolean = !await isElementVisible(illuminareanTab, btnModalClose);
+            let isMain: boolean = (await illuminareanTab.url() === config.illuminareanMainUrl);
+
+            // Given 사용자가 illuminarean 메인 페이지에 접속한 상태이며, 모달이 표시되지 않고 있다.
+            if (isMain && closeModal) {
+                // When 사용자가 Work 메뉴를 클릭한다.
+                await illuminareanTab.click(btnModalClose); // 닫기 버튼의 button태그 aria-label 속성을 이용하여 클릭 처리
+                await illuminareanTab.click('a[aria-label="a11y:Work"]'); // Work 메뉴 클릭
+
+                // Then 메인 화면에서 Work 메뉴로 이동한다.
+                await illuminareanTab.waitForURL(config.illuminareanWorkUrl); // Work 페이지 URL로의 이동을 기다림
+                await verifyPageUrl(illuminareanTab, config.illuminareanWorkUrl, /Work | 일루미나리안/);
+            }
+        });
+
+        // Scenario: [illuminarean] Work 페이지에서 GOODVIEW WORKS 바로가기 클릭
+        await test.step('[illuminarean] Work 페이지에서 GOODVIEW WORKS 바로가기 클릭', async () => {
+            // Given 사용자가 Work 페이지에 접속한 상태이다.
+            await verifyPageUrl(illuminareanTab, config.illuminareanWorkUrl, /Work | 일루미나리안/);
+
+            // When 사용자가 ‘GOODVIEW WORKS 바로가기’ 버튼을 클릭한다.
+            await illuminareanTab.focus('a:text("GOODVIBE WORKS 바로가기")');
+
+            // Then 새 창에서 GOODVIEW WORKS 메인 페이지에 접속된다.
+            const [goodvibeTabPromise] = await Promise.all([
+                illuminareanTab.context().waitForEvent('page'), // 새 탭이 열릴 때 발생하는 이벤트를 기다립니다.
+                illuminareanTab.click('a:text("GOODVIBE WORKS 바로가기")'), // 링크 클릭
+            ]);
+            goodvibeTab = goodvibeTabPromise;
+            await goodvibeTab.waitForLoadState('load');
+            await verifyPageUrl(goodvibeTab, config.goodvideWorksMainUrl, /굿바이브웍스 GoodVibeWorks - 엔터테인먼트 정산 서비스/);
+        });
+
+        // Scenario: [GOODVIEW WORKS] 메인 화면에서 ‘무료 체험 신청’ 바로가기 클릭
+        await test.step('[GOODVIEW WORKS] 메인 화면에서 ‘무료 체험 신청’ 바로가기 클릭', async () => {
+            // Given 사용자가 GOODVIEW WORKS 메인 화면에 접속한 상태이다. 
+            await verifyPageUrl(goodvibeTab, config.goodvideWorksMainUrl, /굿바이브웍스 GoodVibeWorks - 엔터테인먼트 정산 서비스/);
+
+            // When 사용자가 무료 체험 신청 버튼을 클릭한다.
+            await goodvibeTab.waitForTimeout(1000);
+            await goodvibeTab.click('button >> text="무료 체험 신청"');
+
+            // Then ‘서비스 이용 신청’ 모달이 화면에 활성화 된다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
+        });
+
+        // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 모달의 신청 정보 입력
+        await test.step('[GOODVIEW WORKS] 서비스 이용 신청 모달의 신청 정보 입력', async () => {
+            // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 2000);
+
+            // When 사용자가 이용 신청 정보를 입력한다.
+            await fillFormFields(); // text 필드 값 입력
+            await selectRandomOptionFromSelectBox('#businessType'); // 사업자유형 임의의 값 선택
+            await selectRandomOptionFromSelectBox('#scale'); // 직원수 임의의 값 선택
+            await selectDutyByClick(); // 담당 업무 클릭으로 선택
+            await selectDutyBySearch(); // 담당 업무 검색으로 선택
+            await goodvibeTab.click('#agreeTermsOfUse'); // 서비스 이용약관 동의 선택
+            await goodvibeTab.click('#agreePrivacyStatement'); // 개인정보 취급방침 동의 선택
+
+            // Then 이용 신청 정보가 입력된다.
+            await verifyFormInputs(); // 필드 값이 입력되었는지 검증
+        });
+
+        // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 내 서비스 이용약관 확인
+        await test.step('[GOODVIEW WORKS] 서비스 이용 신청 내 서비스 이용약관 확인', async () => {
+            // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
+
+            // When 사용자가 서비스 이용약관 링크를 클릭, 링크 확인 후 창을 닫는다.
+            await clickLinkAndVerifyUrl(
+                goodvibeTab,
+                '서비스 이용약관 동의',
+                config.goodvideWorksAgreementUrl
+            );
+
+            // Then 서비스 이용약관 페이지가 새 창으로 표시되었다가 닫힌다.
+        });
+
+        // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 내 개인정보 취급방침 확인
+        await test.step('[GOODVIEW WORKS] 서비스 이용 신청 내 개인정보 취급방침 확인', async () => {
+            // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
+
+            // When 사용자가 개인정보 취급방침 링크를 클릭, 링크 확인 후 창을 닫는다.
+
+            await clickLinkAndVerifyUrl(
+                goodvibeTab,
+                '개인정보 취급방침 동의',
+                config.goodvideWorksPrivacyUrl
+            );
+
+            // Then 개인정보 취급방침 페이지가 새 창으로 표시되었다가 닫힌다.
+        });
+
+        // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 모달 닫기
+        await test.step('[GOODVIEW WORKS] 서비스 이용 신청 모달 닫기', async () => {
+            // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
+
+            // When 사용자가 신청 취소 버튼을 클릭한다.
+            await goodvibeTab.click('button >> text="신청 취소"');
+
+            // Then 작성 중인 내용이 저장되지 않고 사라짐 알림 창이 표시된다.
+            await toHaveCount(goodvibeTab, 'span >> text="이전 페이지로 돌아갈 경우 작성 중인 내용이 저장되지 않고 사라집니다."', 1, 1000);
+        });
+
+        // Scenario: [GOODVIEW WORKS] 서비스 이용 신청에 작성 중인 내용을 저장하지 않고 닫기
+        await test.step('[GOODVIEW WORKS] 서비스 이용 신청에 작성 중인 내용을 저장하지 않고 닫기', async () => {
+            // Given 서비스 이용 신청 모달 위 작성 중인 내용이 저장되지 않고 사라짐 알림 창이 표시되고 있다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
+            await toHaveCount(goodvibeTab, 'span >> text="이전 페이지로 돌아갈 경우 작성 중인 내용이 저장되지 않고 사라집니다."', 1, 1000);
+
+            // When 사용자가 확인 버튼을 클릭한다.
+            await goodvibeTab.click('button >> text="확인"');
+
+            // Then 서비스 이용 신청 모달이 닫힌다.
+            await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 0, 1000);
+        });
     });
 
-    await test.step('[illuminarean] Main > 인재 POOL 모달 > 닫기 버튼 Click', async() => {
-      if (await isElementVisible(illuminareanTab, 'button[aria-label="company:close_modal"]')) {
-        await illuminareanTab.click('button[aria-label="company:close_modal"]'); // 닫기 버튼의 button태그 aria-label 속성을 이용하여 클릭 처리
-      } else {
-        console.warn('[illuminarean] Main > 인재 POOL 모달이 존재하지 않습니다.');
-      }
+    test.afterAll(async({ browser }) => {
+        browser.close();
     });
-
-    await test.step('[illuminarean] Main > 인재 POOL 모달 > 숨겨졌는지 확인', async() => {
-      const isVisible:boolean = await isElementVisible(illuminareanTab, 'div[class="ReactModalPortal"]');
-      expect(isVisible).toBeFalsy();
-    });
-
-    await test.step('[illuminarean] Work > 메뉴로 이동', async() => {
-      await illuminareanTab.click('a[aria-label="a11y:Work"]'); // Work 메뉴 클릭
-      await illuminareanTab.waitForURL(config.illuminareanWorkUrl); // Work 페이지 URL로의 이동을 기다림
-    });
-
-    await test.step('[illuminarean] Work > 페이지 접속 확인', async() => {
-      await expect(illuminareanTab).toHaveURL(config.illuminareanWorkUrl); // 페이지 URL을 확인하여 검증
-    });
-
-    await test.step('[illuminarean] Work > 페이지 타이틀 확인', async() => {
-      await expect(illuminareanTab).toHaveTitle(/Work | 일루미나리안/);
-    });
-
-    await test.step('[illuminarean] Work > GOODVIBE WORKS 바로가기 클릭', async() => {
-      await illuminareanTab.focus('a:text("GOODVIBE WORKS 바로가기")');
-      const [goodvibeTabPromise] = await Promise.all([
-        illuminareanTab.context().waitForEvent('page'), // 새 탭이 열릴 때 발생하는 이벤트를 기다립니다.
-        illuminareanTab.click('a:text("GOODVIBE WORKS 바로가기")'), // 링크 클릭
-      ]);
-      
-      goodvibeTab = goodvibeTabPromise;
-      await goodvibeTab.waitForLoadState('load');
-    });
-
-    await test.step('[GOODVIBE WORKS] 페이지 접속 확인', async() => {
-      await expect(goodvibeTab).toHaveURL(config.goodvideWorksMainUrl);
-    });
-
-    await test.step('[GOODVIBE WORKS] 페이지 타이틀 확인', async() => {
-      await expect(goodvibeTab).toHaveTitle(/굿바이브웍스 GoodVibeWorks - 엔터테인먼트 정산 서비스/);
-    });
-
-    await test.step('[GOODVIBE WORKS] 무료 체험 신청 버튼 클릭', async() => {
-      await goodvibeTab.waitForTimeout(2000); // 애니메이션이 작동하기 전에도 버튼이 클릭되나 애니메이션 동작 확인을 위해 대기시간 추가
-      await goodvibeTab.click('button >> text="무료 체험 신청"');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 모달 활성화 여부 확인', async() => {
-      await expect(goodvibeTab.locator('div[aria-label="서비스 이용신청 모달"]')).toHaveCount(1, { timeout: 1000 });
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 필드 값 입력', async() => {
-      await fillFormFields();
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 사업자유형 임의의 값 선택', async() => {
-      await selectRandomOptionFromSelectBox('#businessType');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 직원수 임의의 값 선택', async() => {
-      await selectRandomOptionFromSelectBox('#scale');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 담당 업무 클릭으로 선택', async() => {
-      await selectDutyByClick();
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 담당 업무 검색으로 선택', async() => {
-      await selectDutyBySearch();
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 서비스 이용약관 동의 링크 클릭 후 링크 확인', async() => {
-      await clickLinkAndVerifyUrl(
-        goodvibeTab,
-        '서비스 이용약관 동의',
-        config.goodvideWorksAgreementUrl
-      );
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 서비스 이용약관 동의 선택', async() => {
-      await goodvibeTab.click('#agreeTermsOfUse');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 개인정보 취급방침 동의 링크 클릭 후 링크 확인', async() => {
-      await clickLinkAndVerifyUrl(
-        goodvibeTab,
-        '개인정보 취급방침 동의',
-        config.goodvideWorksPrivacyUrl
-      );
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 개인정보 취급방침 동의 선택', async() => {
-      await goodvibeTab.click('#agreePrivacyStatement');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 필드 값이 입력되었는지 검증', async() => {
-      await verifyFormInputs();
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 신청 취소 버튼 클릭', async() => {
-      await goodvibeTab.click('button >> text="신청 취소"');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 취소 확인 버튼 클릭', async() => {
-      await goodvibeTab.click('button >> text="확인"');
-    });
-
-    await test.step('[GOODVIBE WORKS] 서비스 이용신청 > 모달 닫힘 확인', async() => {
-      await expect(goodvibeTab.locator('div[aria-label="서비스 이용신청 모달"]')).toHaveCount(0, { timeout: 1000 });
-    });
-
-  });
-
-  test.afterAll(async({ browser }) => {
-    // 테스트 종료 후 close 및 stop 일괄 처리 / 객체가 null 인경우를 조건부 체이닝으로 예외처리
-    await (illuminareanTab?.isClosed() ? Promise.resolve() : illuminareanTab.close());
-    await (goodvibeTab?.isClosed() ? Promise.resolve() : goodvibeTab.close());
-    browser.close();
-  });
-
-
-
-
-
 
   /**
    * react-select 영역의 option을 임의로 입력하기 위한 함수
@@ -242,6 +260,7 @@ test.describe('illuminarean', () => {
       page.click(`span:has-text("${linkText}") + a`),
     ]);
     await newTab.waitForLoadState('load');
+    await newTab.waitForTimeout(1500);
     await expect(newTab).toHaveURL(expectedUrl);
   }
 
@@ -296,12 +315,37 @@ test.describe('illuminarean', () => {
       });
     }
     // 담당 업무 선택 여부 검증
-    await expect(goodvibeTab.locator('dl.duties ul.visible-scroll')).toHaveCount(1, { timeout: 1000 });
+    await toHaveCount(goodvibeTab, 'dl.duties ul.visible-scroll', 1, 1000);
     
     // 서비스 이용약관 동의
-    await expect(goodvibeTab.locator('label[for="agreeTermsOfUse"] span svg[data-icon="square-check"]')).toHaveCount(1, { timeout: 1000 });
+    await toHaveCount(goodvibeTab, 'label[for="agreeTermsOfUse"] span svg[data-icon="square-check"]', 1, 1000);
 
     // 개인정보 취급방침 동의
-    await expect(goodvibeTab.locator('label[for="agreePrivacyStatement"] span svg[data-icon="square-check"]')).toHaveCount(1, { timeout: 1000 });
+    await toHaveCount(goodvibeTab, 'label[for="agreePrivacyStatement"] span svg[data-icon="square-check"]', 1, 1000);
   }
+
+  /**
+   * 현재 페이지가 인자로 받은 페이지인지 검증
+   * 
+   * @param page Playwright Page 객체 - 검증 대상 페이지
+   * @param url 기대 URL
+   * @param title 기대 URL의 타이틀
+   */
+  async function verifyPageUrl(page: Page, url: string, title: RegExp) {
+    await expect(page).toHaveURL(url); // 페이지 URL을 확인하여 검증
+    await expect(page).toHaveTitle(title);
+  }
+
+  /**
+   * 페이지 내 특정 element의 개수가 기대하는 개수와 일치하는지 확인
+   * 
+   * @param page Playwright Page 객체 - 검증 대상 페이지
+   * @param selector 대상 element의 선택자
+   * @param haveCount 기대하는 element의 개수
+   * @param timeout 검증 대기시간
+   */
+  async function toHaveCount(page: Page, selector: string, haveCount: number, timeout: number) {
+    await expect(page.locator(selector)).toHaveCount(haveCount, { timeout: timeout });
+  } 
+
 });
