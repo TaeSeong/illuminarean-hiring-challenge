@@ -36,13 +36,14 @@ https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/edacf4a
 
 ### Playwright 실행 화면
 
-https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/cc7fc8c6-8b87-4ceb-bc98-f73950dfdac5
+https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/4deb1af2-478f-406a-b3b4-a993a78ed500
 
 
 
 ### Playwright UI 실행 화면
 
-https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/61cd06a6-f61c-43fd-a34c-d91a8340669d
+https://github.com/TaeSeong/illuminarean-hiring-challenge/assets/7597961/1b1782fa-7cd7-4ad1-af77-3fdd5300660c
+
 
 
 ### 테스트 코드 개발 환경
