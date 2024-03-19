@@ -123,14 +123,13 @@ test.describe('Illuminarean Hiring Challenge', () => {
             // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
             await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
 
-            // When 사용자가 서비스 이용약관 링크를 클릭, 링크 확인 후 창을 닫는다.
+            // When 사용자가 서비스 이용약관 링크를 클릭, 링크를 확인한다.
+            // Then 서비스 이용약관 페이지가 표시된다.
             await clickLinkAndVerifyUrl(
                 goodvibeTab,
                 '서비스 이용약관 동의',
                 config.goodvideWorksAgreementUrl
             );
-
-            // Then 서비스 이용약관 페이지가 새 창으로 표시되었다가 닫힌다.
         });
 
         // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 내 개인정보 취급방침 확인
@@ -138,15 +137,13 @@ test.describe('Illuminarean Hiring Challenge', () => {
             // Given 서비스 이용 신청 모달이 화면에 표시되고 있다.
             await toHaveCount(goodvibeTab, 'div[aria-label="서비스 이용신청 모달"]', 1, 1000);
 
-            // When 사용자가 개인정보 취급방침 링크를 클릭, 링크 확인 후 창을 닫는다.
-
+            // When 사용자가 개인정보 취급방침 링크를 클릭, 링크를 확인한다.
+            // Then 개인정보 취급방침 페이지가 표시된다.
             await clickLinkAndVerifyUrl(
                 goodvibeTab,
                 '개인정보 취급방침 동의',
                 config.goodvideWorksPrivacyUrl
             );
-
-            // Then 개인정보 취급방침 페이지가 새 창으로 표시되었다가 닫힌다.
         });
 
         // Scenario: [GOODVIEW WORKS] 서비스 이용 신청 모달 닫기
